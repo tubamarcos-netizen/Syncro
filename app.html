@@ -10,33 +10,49 @@
 :root{--v:#10B981;--g:#1E293B;--f:#F8FAFC;--c:#64748B;--a:#F59E0B;--b:#E2E8F0}
 *{box-sizing:border-box}
 body{margin:0;background:var(--f);color:var(--g);font:16px/1.5 "Plus Jakarta Sans",system-ui,sans-serif}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 20px;padding-top:max(12px,env(safe-area-inset-top));background:#fff;border-bottom:1px solid var(--b)}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 20px;padding-top:max(12px,env(safe-area-inset-top));background:#fff;border-bottom:1px solid var(--b);position:sticky;top:0;z-index:5}
 header b{font-size:20px;font-weight:800}
-#quem{color:var(--c);font-size:14px;margin-left:auto}
-main{max-width:640px;margin:0 auto;padding:20px 20px calc(24px + env(safe-area-inset-bottom))}
-h1{font-size:24px;margin:0 0 16px;letter-spacing:-.01em}
+#quem{color:var(--c);font-size:14px}
+main{max-width:680px;margin:0 auto;padding:20px 20px calc(96px + env(safe-area-inset-bottom))}
+h1{font-size:24px;margin:0 0 16px;letter-spacing:-.01em;line-height:1.2}
+h2{font-size:17px;margin:24px 0 8px}
 .card{display:block;background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;margin-bottom:12px;color:inherit}
 button.card{width:100%;text-align:left;font:inherit;cursor:pointer}
 input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--b);border-radius:10px;margin-bottom:10px;background:#fff;color:var(--g);font:inherit}
 input[type=checkbox]{width:24px;min-height:24px;height:24px;margin:0;flex:none;accent-color:var(--v)}
 .btn{min-height:48px;padding:0 20px;border:2px solid transparent;border-radius:12px;font:inherit;font-weight:700;background:var(--v);color:var(--g);cursor:pointer}
 .btn.sec{background:transparent;border-color:var(--g)}
-.btn.link{background:none;min-height:40px;padding:0 8px;color:var(--c);font-weight:500}
+.btn.link{background:none;min-height:44px;padding:0 8px;color:var(--c);font-weight:500}
 .acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
 .barra{height:8px;background:var(--b);border-radius:99px;overflow:hidden;margin-top:8px}
 .barra i{display:block;height:100%;background:var(--v)}
 .msg{background:#FEF3C7;border-left:4px solid var(--a);border-radius:8px;padding:10px 12px;margin-bottom:16px}
-.item{display:flex;gap:12px;align-items:center;min-height:56px;border-top:1px solid var(--b);cursor:pointer}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--b);border-radius:14px;padding:14px}
+.kpi b{display:block;font-size:30px;line-height:1.1;font-weight:800}
+.kpi.alerta{background:#FEF3C7;border-color:var(--a)}
+.chips{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.chip{min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--b);background:#fff;font:inherit;cursor:pointer;color:var(--g)}
+.chip[aria-pressed=true]{background:var(--g);color:var(--f);border-color:var(--g)}
+.tag{display:inline-block;background:#FEF3C7;border-radius:99px;padding:0 10px;font-size:13px;font-weight:600;margin-left:6px}
+.tag.ok{background:#D1FAE5}
+.lin{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--b);padding:12px 0;font:inherit;color:inherit;cursor:pointer}
+.lin:first-child{border-top:0}
+.item{display:flex;align-items:center;border-top:1px solid var(--b)}
 .item:first-child{border-top:0}
+.item label{display:flex;gap:12px;align-items:center;flex:1;min-height:56px;cursor:pointer}
+.x{background:none;border:0;color:var(--c);font-size:24px;min-width:44px;min-height:44px;cursor:pointer}
 small{color:var(--c)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--b);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;min-height:58px;border:0;background:none;font:inherit;font-size:12px;color:var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+nav button[aria-current=true]{color:var(--g);font-weight:700}
+nav button[aria-current=true] svg{stroke:var(--v)}
+nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 :focus-visible{outline:3px solid var(--g);outline-offset:2px}
 </style>
 </head>
 <body>
-<header>
-  <b>Syncro</b><span id="quem"></span>
-  <button class="btn link" id="sair" hidden>Sair</button>
-</header>
+<header><b>Syncro</b><span id="quem"></span></header>
 <main>
   <div id="msg" class="msg" role="alert" hidden></div>
 
@@ -61,8 +77,16 @@ small{color:var(--c)}
     </form>
   </section>
 
+  <section id="v-inicio" hidden></section>
+
   <section id="v-lista" hidden>
-    <h1>Seus checklists</h1>
+    <h1>Checklists</h1>
+    <input id="busca" type="search" placeholder="Buscar checklist" aria-label="Buscar checklist">
+    <div class="chips">
+      <button class="chip" data-f="todos">Todos</button>
+      <button class="chip" data-f="andamento">Em andamento</button>
+      <button class="chip" data-f="concluidos">Concluídos</button>
+    </div>
     <div id="lista"></div>
     <button class="btn" id="b-novo">Novo checklist</button>
   </section>
@@ -76,106 +100,226 @@ small{color:var(--c)}
       <div class="acoes">
         <button class="btn sec" type="button" id="b-mais">Adicionar item</button>
         <button class="btn" type="submit">Salvar checklist</button>
-        <button class="btn link" type="button" data-voltar>Cancelar</button>
+        <button class="btn link" type="button" id="b-cancelar">Cancelar</button>
       </div>
     </form>
   </section>
 
-  <section id="v-check" hidden>
-    <h1 id="c-titulo"></h1>
-    <div class="card" id="itens"></div>
-    <button class="btn sec" data-voltar>Voltar</button>
-  </section>
+  <section id="v-check" hidden></section>
+  <section id="v-conta" hidden></section>
 </main>
+
+<nav id="abas" aria-label="Principal" hidden>
+  <button data-aba="inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Início</button>
+  <button data-aba="lista"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Checklists</button>
+  <button data-aba="conta"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Conta</button>
+</nav>
 
 <script src="modelos.js"></script>
 <script>
-/* 1. Cole aqui os dados do seu projeto (Settings > API). Use só a chave anon, nunca a service_role. */
-const URL_SB = "https://apchzztflyyhboihnsaw.supabase.co";
-const CHAVE = "sb_publishable_m06xWF6wrN7sb1cInhWzYg_dJWMC-0a";
+/* Cole aqui os dados do projeto (Settings > API). Use só a chave anon, nunca a service_role. */
+const URL_SB = "COLE_AQUI_A_URL_DO_PROJETO";
+const CHAVE = "COLE_AQUI_A_CHAVE_ANON";
 
 const db = supabase.createClient(URL_SB, CHAVE);
 const $ = s => document.querySelector(s);
 const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const telas = ["login","empresa","lista","novo","check"];
-let eu = null, emp = null;
+const telas = ["login","empresa","inicio","lista","novo","check","conta"], abas = ["inicio","lista","conta"];
+const hoje = () => new Date().toLocaleDateString("sv");
+const dmy = d => d.split("-").reverse().join("/");
+const quando = d => new Date(d).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+let eu = null, emp = null, dados = [], atual = null, filtro = "todos", busca = "";
 
-function ir(t){ telas.forEach(x => $("#v-"+x).hidden = x !== t); $("#sair").hidden = t === "login"; aviso(""); }
-function aviso(m){ const e = $("#msg"); e.textContent = m; e.hidden = !m; }
+function ir(t){
+  telas.forEach(x => $("#v-"+x).hidden = x !== t);
+  $("#abas").hidden = !abas.includes(t);
+  document.querySelectorAll("#abas button").forEach(b => b.setAttribute("aria-current", b.dataset.aba === t));
+  window.scrollTo(0, 0);
+}
+function aviso(m){ const e = $("#msg"); e.textContent = m || ""; e.hidden = !m; }
+const st = c => {
+  const t = c.itens.length, f = c.itens.filter(i => i.concluido_em).length;
+  return { t, f, a: c.itens.filter(i => !i.concluido_em && i.prazo && i.prazo < hoje()).length, p: t ? Math.round(f/t*100) : 0, ok: t > 0 && f === t };
+};
+const modelosDaEmpresa = () => (MODELOS[emp.segmento] || MODELOS.outro).c;
+const botoesModelos = () => Object.keys(modelosDaEmpresa()).map(t => `<button type="button" class="btn sec" data-modelo="${esc(t)}">${esc(t)}</button>`).join("");
 
 async function iniciar(){
   const { data:{ session } } = await db.auth.getSession();
   if(!session) return ir("login");
   eu = session.user; carregarEmpresa();
 }
-
 async function autenticar(cadastro){
+  aviso("");
   const email = $("#email").value.trim(), password = $("#senha").value;
   const r = cadastro ? await db.auth.signUp({ email, password }) : await db.auth.signInWithPassword({ email, password });
   if(r.error) return aviso(r.error.message);
   if(!r.data.session) return aviso("Conta criada. Confirme seu e-mail e depois clique em Entrar.");
   eu = r.data.session.user; carregarEmpresa();
 }
-
 async function carregarEmpresa(){
   const { data, error } = await db.from("membros").select("empresa_id, empresas(nome, plano, segmento)").limit(1).maybeSingle();
   if(error) return aviso(error.message);
   if(!data) return ir("empresa");
   emp = { id: data.empresa_id, ...data.empresas };
   $("#quem").textContent = emp.nome;
-  listar();
+  abrirAba("inicio");
+}
+async function abrirAba(t){
+  aviso("");
+  const { data, error } = await db.from("checklists").select("id, titulo, criado_em, itens(id, texto, responsavel, prazo, concluido_em, ordem)").order("criado_em", { ascending:false });
+  if(error) aviso(error.message); else dados = data;
+  ({ inicio: rInicio, lista: rLista, conta: rConta })[t]();
+  ir(t);
 }
 
-async function listar(){
-  ir("lista");
-  const { data, error } = await db.from("checklists").select("id, titulo, itens(concluido_em)").order("criado_em", { ascending:false });
-  if(error) return aviso(error.message);
-  $("#lista").innerHTML = data.length ? data.map(c => {
-    const t = c.itens.length, f = c.itens.filter(i => i.concluido_em).length, p = t ? Math.round(f/t*100) : 0;
-    return `<button class="card" data-id="${c.id}"><b>${esc(c.titulo)}</b><br><small>${f} de ${t} itens concluídos</small><div class="barra"><i style="width:${p}%"></i></div></button>`;
-  }).join("") : `<p><small>Nenhum checklist ainda. Crie o primeiro.</small></p>`;
+/* ---------- Início ---------- */
+const kpi = (n, l, al) => `<div class="kpi${al ? " alerta" : ""}"><b>${n}</b><small>${l}</small></div>`;
+const bloco = (t, arr, sub, vazio) => `<h2>${t}</h2>` + (arr.length
+  ? `<div class="card">` + arr.map(i => `<button class="lin" data-abrir="${i.cid}"><span>${esc(i.texto)}<br><small>${esc(i.c)} · ${sub(i)}</small></span></button>`).join("") + `</div>`
+  : `<p><small>${vazio}</small></p>`);
+
+function rInicio(){
+  const hr = new Date().getHours(), s = hr < 12 ? "Bom dia" : hr < 18 ? "Boa tarde" : "Boa noite";
+  let h = `<h1>${s}, ${esc(emp.nome)}</h1>`;
+  if(!dados.length){
+    h += `<div class="card"><b>Vamos começar</b><p><small>Escolha um modelo do seu ramo e personalize do seu jeito.</small></p><div class="acoes">${botoesModelos()}</div></div>`;
+  } else {
+    const S = dados.map(st), tot = S.reduce((a, x) => a + x.t, 0), f = S.reduce((a, x) => a + x.f, 0), at = S.reduce((a, x) => a + x.a, 0);
+    const its = dados.flatMap(c => c.itens.map(i => ({ ...i, c: c.titulo, cid: c.id })));
+    const atras = its.filter(i => !i.concluido_em && i.prazo && i.prazo < hoje()).sort((a, b) => a.prazo.localeCompare(b.prazo)).slice(0, 5);
+    const rec = its.filter(i => i.concluido_em).sort((a, b) => b.concluido_em.localeCompare(a.concluido_em)).slice(0, 5);
+    h += `<div class="kpis">${kpi(dados.length, "Checklists")}${kpi(S.filter(x => x.ok).length, "Concluídos")}${kpi(tot - f, "Itens pendentes")}${kpi(at, "Atrasados", at > 0)}</div>`;
+    h += `<div class="card"><b>Progresso geral</b> <small>${f} de ${tot} itens</small><div class="barra"><i style="width:${tot ? Math.round(f/tot*100) : 0}%"></i></div></div>`;
+    h += bloco("Precisam de atenção", atras, i => "venceu em " + dmy(i.prazo), "Nada atrasado. Bom trabalho!");
+    h += bloco("Concluídos recentemente", rec, i => quando(i.concluido_em), "Nenhum item concluído ainda.");
+  }
+  $("#v-inicio").innerHTML = h;
 }
 
-function modelosDaEmpresa(){ return (MODELOS[emp.segmento] || MODELOS.outro).c; }
-function novo(){
-  ir("novo"); $("#titulo").value = ""; $("#linhas").innerHTML = ""; maisItem(); maisItem();
-  $("#modelos").innerHTML = "<small>Comece por um modelo do seu ramo (você pode editar tudo):</small><div class='acoes'>" +
-    Object.keys(modelosDaEmpresa()).map(t => `<button type="button" class="btn sec" data-modelo="${esc(t)}">${esc(t)}</button>`).join("") + "</div>";
+/* ---------- Lista ---------- */
+function rLista(){
+  const q = busca.toLowerCase();
+  const arr = dados.filter(c => c.titulo.toLowerCase().includes(q) && (filtro === "todos" || (filtro === "concluidos") === st(c).ok));
+  $("#lista").innerHTML = arr.length ? arr.map(c => {
+    const s = st(c);
+    return `<button class="card" data-abrir="${c.id}"><b>${esc(c.titulo)}</b>${s.a ? `<span class="tag">${s.a} atrasado${s.a > 1 ? "s" : ""}</span>` : ""}${s.ok ? `<span class="tag ok">Concluído</span>` : ""}<br><small>${s.f} de ${s.t} itens</small><div class="barra"><i style="width:${s.p}%"></i></div></button>`;
+  }).join("") : `<p><small>${dados.length ? "Nada encontrado com esse filtro." : "Nenhum checklist ainda. Crie o primeiro."}</small></p>`;
+  document.querySelectorAll("[data-f]").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filtro));
 }
+
+/* ---------- Novo ---------- */
 function maisItem(){
-  $("#linhas").insertAdjacentHTML("beforeend",
-    `<div class="card"><input class="i-txt" placeholder="Item (ex.: Conferir o troco)"><input class="i-resp" placeholder="Responsável (opcional)"><input class="i-prazo" type="date" aria-label="Prazo"></div>`);
+  $("#linhas").insertAdjacentHTML("beforeend", `<div class="card"><input class="i-txt" placeholder="Item (ex.: Conferir o troco)"><input class="i-resp" placeholder="Responsável (opcional)"><input class="i-prazo" type="date" aria-label="Prazo"></div>`);
 }
-
+function novo(){
+  aviso("");
+  if(emp.plano === "gratis" && dados.length >= 3) return aviso("Você usou os 3 checklists do plano Grátis. Exclua um checklist ou aguarde os novos planos.");
+  ir("novo"); $("#titulo").value = ""; $("#linhas").innerHTML = ""; maisItem(); maisItem();
+  $("#modelos").innerHTML = `<small>Comece por um modelo do seu ramo (você pode editar tudo):</small><div class="acoes">${botoesModelos()}</div>`;
+}
+function usarModelo(t){
+  if($("#v-novo").hidden){ novo(); if($("#v-novo").hidden) return; }
+  $("#titulo").value = t; $("#linhas").innerHTML = "";
+  modelosDaEmpresa()[t].split("; ").forEach(x => { maisItem(); $("#linhas").lastElementChild.querySelector(".i-txt").value = x; });
+}
 async function salvar(e){
-  e.preventDefault();
+  e.preventDefault(); aviso("");
   const itens = [...document.querySelectorAll("#linhas .card")].map((l, i) => ({
-    texto: l.querySelector(".i-txt").value.trim(),
-    responsavel: l.querySelector(".i-resp").value.trim() || null,
-    prazo: l.querySelector(".i-prazo").value || null,
-    ordem: i
+    texto: l.querySelector(".i-txt").value.trim(), responsavel: l.querySelector(".i-resp").value.trim() || null,
+    prazo: l.querySelector(".i-prazo").value || null, ordem: i
   })).filter(i => i.texto);
   if(!itens.length) return aviso("Adicione ao menos um item.");
   const { data:c, error } = await db.from("checklists").insert({ empresa_id: emp.id, titulo: $("#titulo").value.trim() }).select("id").single();
   if(error) return aviso(error.message);
   const r = await db.from("itens").insert(itens.map(i => ({ ...i, checklist_id: c.id })));
   if(r.error) return aviso(r.error.message);
-  listar();
+  abrirAba("lista");
 }
 
-async function abrir(id){
-  ir("check");
-  const { data:c, error } = await db.from("checklists").select("titulo, itens(id, texto, responsavel, prazo, concluido_em, ordem)").eq("id", id).single();
+/* ---------- Detalhe ---------- */
+function abrir(id){ atual = id; aviso(""); rCheck(); ir("check"); }
+function rCheck(){
+  const c = dados.find(x => x.id === atual); if(!c) return abrirAba("lista");
+  const s = st(c), itens = [...c.itens].sort((a, b) => a.ordem - b.ordem);
+  $("#v-check").innerHTML = `<h1>${esc(c.titulo)}</h1>
+  <div class="card"><small>${s.f} de ${s.t} itens · ${s.p}%</small><div class="barra"><i style="width:${s.p}%"></i></div></div>
+  <div class="card">${itens.length ? itens.map(i => {
+    const at = !i.concluido_em && i.prazo && i.prazo < hoje();
+    const info = [i.responsavel, i.prazo && "até " + dmy(i.prazo)].filter(Boolean).map(esc).join(" · ");
+    return `<div class="item"><label><input type="checkbox" data-id="${i.id}" ${i.concluido_em ? "checked" : ""}><span>${esc(i.texto)}${at ? `<span class="tag">Atrasado</span>` : ""}${info ? `<br><small>${info}</small>` : ""}</span></label><button class="x" data-del="${i.id}" aria-label="Excluir item">×</button></div>`;
+  }).join("") : `<small>Sem itens. Adicione abaixo.</small>`}</div>
+  <form id="f-item" class="card"><b>Adicionar item</b><input id="n-txt" placeholder="Item" required><input id="n-resp" placeholder="Responsável (opcional)"><input id="n-prazo" type="date" aria-label="Prazo"><button class="btn" type="submit">Adicionar</button></form>
+  <div class="acoes"><button class="btn sec" data-acao="reiniciar">Reiniciar</button><button class="btn sec" data-acao="duplicar">Duplicar</button><button class="btn sec" data-acao="renomear">Renomear</button></div>
+  <div class="acoes"><button class="btn link" data-acao="voltar">Voltar</button><button class="btn link" data-acao="excluir">Excluir checklist</button></div>`;
+}
+
+$("#v-check").addEventListener("change", async e => {
+  const k = e.target; if(!k.dataset.id) return; aviso("");
+  const t = k.checked ? new Date().toISOString() : null;
+  const { error } = await db.from("itens").update({ concluido_em: t, concluido_por: k.checked ? eu.id : null }).eq("id", k.dataset.id);
+  if(error){ k.checked = !k.checked; return aviso(error.message); }
+  dados.flatMap(c => c.itens).find(i => i.id === k.dataset.id).concluido_em = t; rCheck();
+});
+$("#v-check").addEventListener("submit", async e => {
+  e.preventDefault(); aviso("");
+  const c = dados.find(x => x.id === atual);
+  const { data, error } = await db.from("itens").insert({ checklist_id: c.id, texto: $("#n-txt").value.trim(), responsavel: $("#n-resp").value.trim() || null, prazo: $("#n-prazo").value || null, ordem: c.itens.length })
+    .select("id, texto, responsavel, prazo, concluido_em, ordem").single();
   if(error) return aviso(error.message);
-  $("#c-titulo").textContent = c.titulo;
-  $("#itens").innerHTML = c.itens.sort((a, b) => a.ordem - b.ordem).map(i => {
-    const info = [i.responsavel, i.prazo && "até " + i.prazo.split("-").reverse().join("/")].filter(Boolean).map(esc).join(" · ");
-    return `<label class="item"><input type="checkbox" data-id="${i.id}" ${i.concluido_em ? "checked" : ""}><span>${esc(i.texto)}${info ? `<br><small>${info}</small>` : ""}</span></label>`;
-  }).join("");
+  c.itens.push(data); rCheck();
+});
+$("#v-check").addEventListener("click", async e => {
+  const d = e.target.closest("[data-del]"), a = e.target.closest("[data-acao]"), c = dados.find(x => x.id === atual);
+  if(d){
+    if(!confirm("Excluir este item?")) return; aviso("");
+    const { error } = await db.from("itens").delete().eq("id", d.dataset.del);
+    if(error) return aviso(error.message);
+    c.itens = c.itens.filter(i => i.id !== d.dataset.del); return rCheck();
+  }
+  if(!a) return; aviso("");
+  const k = a.dataset.acao;
+  if(k === "voltar") return abrirAba("lista");
+  if(k === "renomear"){
+    const t = prompt("Novo nome do checklist", c.titulo); if(!t || !t.trim()) return;
+    const { error } = await db.from("checklists").update({ titulo: t.trim() }).eq("id", c.id);
+    if(error) return aviso(error.message); c.titulo = t.trim(); rCheck();
+  }
+  if(k === "reiniciar"){
+    if(!confirm("Desmarcar todos os itens deste checklist?")) return;
+    const { error } = await db.from("itens").update({ concluido_em: null, concluido_por: null }).eq("checklist_id", c.id);
+    if(error) return aviso(error.message); c.itens.forEach(i => i.concluido_em = null); rCheck();
+  }
+  if(k === "excluir"){
+    if(!confirm("Excluir o checklist e todos os itens?")) return;
+    const { error } = await db.from("checklists").delete().eq("id", c.id);
+    if(error) return aviso(error.message); abrirAba("lista");
+  }
+  if(k === "duplicar"){
+    const r = await db.from("checklists").insert({ empresa_id: emp.id, titulo: c.titulo + " (cópia)" }).select("id").single();
+    if(r.error) return aviso(r.error.message);
+    const x = await db.from("itens").insert(c.itens.map(i => ({ checklist_id: r.data.id, texto: i.texto, responsavel: i.responsavel, prazo: i.prazo, ordem: i.ordem })));
+    if(x.error) return aviso(x.error.message); abrirAba("lista");
+  }
+});
+
+/* ---------- Conta ---------- */
+function rConta(){
+  const nomes = { gratis:"Grátis", essencial:"Essencial", profissional:"Profissional", empresa:"Empresa" }, n = dados.length;
+  $("#v-conta").innerHTML = `<h1>Conta</h1>
+  <div class="card"><b>${esc(emp.nome)}</b><br><small>${esc((MODELOS[emp.segmento] || MODELOS.outro).nome)}</small></div>
+  <div class="card"><b>Plano ${nomes[emp.plano] || emp.plano}</b><br>${emp.plano === "gratis"
+    ? `<small>${n} de 3 checklists usados</small><div class="barra"><i style="width:${Math.min(100, n/3*100)}%"></i></div>`
+    : `<small>${n} checklists</small>`}</div>
+  <div class="card"><small>Em breve: Essencial (R$ 29/mês), Profissional (R$ 89/mês) e Empresa (a partir de R$ 249/mês), com mais usuários, PDF, fotos e escalas.</small></div>
+  <div class="card"><small>Conectado como ${esc(eu.email)}</small></div>
+  <button class="btn sec" data-sair>Sair</button>`;
 }
 
+/* ---------- Eventos ---------- */
 $("#f-login").onsubmit = e => { e.preventDefault(); autenticar(false); };
 $("#b-cadastro").onclick = () => $("#f-login").reportValidity() && autenticar(true);
+$("#seg").innerHTML = '<option value="" disabled selected>Tipo de empresa</option>' + Object.entries(MODELOS).map(([k, s]) => `<option value="${k}">${s.nome}</option>`).join("");
 $("#f-empresa").onsubmit = async e => {
   e.preventDefault();
   const { error } = await db.rpc("criar_empresa", { p_nome: $("#nome-emp").value.trim(), p_segmento: $("#seg").value });
@@ -183,27 +327,19 @@ $("#f-empresa").onsubmit = async e => {
   carregarEmpresa();
 };
 $("#b-novo").onclick = novo;
-$("#seg").innerHTML = '<option value="" disabled selected>Tipo de empresa</option>' +
-  Object.entries(MODELOS).map(([k, s]) => `<option value="${k}">${s.nome}</option>`).join("");
-$("#modelos").onclick = e => {
-  const b = e.target.closest("[data-modelo]"); if(!b) return;
-  const t = b.dataset.modelo;
-  $("#titulo").value = t; $("#linhas").innerHTML = "";
-  modelosDaEmpresa()[t].split("; ").forEach(x => { maisItem(); $("#linhas").lastElementChild.querySelector(".i-txt").value = x; });
-};
 $("#b-mais").onclick = maisItem;
+$("#b-cancelar").onclick = () => abrirAba("lista");
 $("#f-novo").onsubmit = salvar;
-$("#lista").onclick = e => { const b = e.target.closest("[data-id]"); if(b) abrir(b.dataset.id); };
-document.querySelectorAll("[data-voltar]").forEach(b => b.onclick = listar);
-$("#itens").onchange = async e => {
-  const k = e.target; if(!k.dataset.id) return;
-  const { error } = await db.from("itens").update({
-    concluido_em: k.checked ? new Date().toISOString() : null,
-    concluido_por: k.checked ? eu.id : null
-  }).eq("id", k.dataset.id);
-  if(error){ k.checked = !k.checked; aviso(error.message); }
-};
-$("#sair").onclick = () => db.auth.signOut().then(() => { eu = emp = null; $("#quem").textContent = ""; ir("login"); });
+$("#busca").oninput = e => { busca = e.target.value; rLista(); };
+$("#abas").onclick = e => { const b = e.target.closest("[data-aba]"); if(b) abrirAba(b.dataset.aba); };
+$("#v-lista").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if(b){ filtro = b.dataset.f; rLista(); } });
+$("#v-conta").addEventListener("click", e => {
+  if(e.target.closest("[data-sair]")) db.auth.signOut().then(() => { eu = emp = null; dados = []; $("#quem").textContent = ""; ir("login"); });
+});
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-abrir]"); if(a) return abrir(a.dataset.abrir);
+  const m = e.target.closest("[data-modelo]"); if(m) usarModelo(m.dataset.modelo);
+});
 
 iniciar();
 </script>
