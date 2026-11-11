@@ -17,7 +17,7 @@ main{max-width:640px;margin:0 auto;padding:20px 20px calc(24px + env(safe-area-i
 h1{font-size:24px;margin:0 0 16px;letter-spacing:-.01em}
 .card{display:block;background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;margin-bottom:12px;color:inherit}
 button.card{width:100%;text-align:left;font:inherit;cursor:pointer}
-input{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--b);border-radius:10px;margin-bottom:10px;background:#fff;color:var(--g);font:inherit}
+input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--b);border-radius:10px;margin-bottom:10px;background:#fff;color:var(--g);font:inherit}
 input[type=checkbox]{width:24px;min-height:24px;height:24px;margin:0;flex:none;accent-color:var(--v)}
 .btn{min-height:48px;padding:0 20px;border:2px solid transparent;border-radius:12px;font:inherit;font-weight:700;background:var(--v);color:var(--g);cursor:pointer}
 .btn.sec{background:transparent;border-color:var(--g)}
@@ -56,6 +56,7 @@ small{color:var(--c)}
     <h1>Qual o nome da sua empresa?</h1>
     <form id="f-empresa">
       <input id="nome-emp" placeholder="Ex.: Padaria Boa Massa" required>
+      <select id="seg" required aria-label="Tipo de empresa"></select>
       <button class="btn" type="submit">Continuar</button>
     </form>
   </section>
@@ -69,6 +70,7 @@ small{color:var(--c)}
   <section id="v-novo" hidden>
     <h1>Novo checklist</h1>
     <form id="f-novo">
+      <div id="modelos" class="card"></div>
       <input id="titulo" placeholder="Título (ex.: Abertura da loja)" required>
       <div id="linhas"></div>
       <div class="acoes">
@@ -86,10 +88,11 @@ small{color:var(--c)}
   </section>
 </main>
 
+<script src="modelos.js"></script>
 <script>
 /* 1. Cole aqui os dados do seu projeto (Settings > API). Use só a chave anon, nunca a service_role. */
-const URL_SB = "https://apchzztflyyhboihnsaw.supabase.co";
-const CHAVE = "sb_publishable_m06xWF6wrN7sb1cInhWzYg_dJWMC-0a";
+const URL_SB = "COLE_AQUI_A_URL_DO_PROJETO";
+const CHAVE = "COLE_AQUI_A_CHAVE_ANON";
 
 const db = supabase.createClient(URL_SB, CHAVE);
 const $ = s => document.querySelector(s);
@@ -115,7 +118,7 @@ async function autenticar(cadastro){
 }
 
 async function carregarEmpresa(){
-  const { data, error } = await db.from("membros").select("empresa_id, empresas(nome, plano)").limit(1).maybeSingle();
+  const { data, error } = await db.from("membros").select("empresa_id, empresas(nome, plano, segmento)").limit(1).maybeSingle();
   if(error) return aviso(error.message);
   if(!data) return ir("empresa");
   emp = { id: data.empresa_id, ...data.empresas };
@@ -133,7 +136,12 @@ async function listar(){
   }).join("") : `<p><small>Nenhum checklist ainda. Crie o primeiro.</small></p>`;
 }
 
-function novo(){ ir("novo"); $("#titulo").value = ""; $("#linhas").innerHTML = ""; maisItem(); maisItem(); }
+function modelosDaEmpresa(){ return (MODELOS[emp.segmento] || MODELOS.outro).c; }
+function novo(){
+  ir("novo"); $("#titulo").value = ""; $("#linhas").innerHTML = ""; maisItem(); maisItem();
+  $("#modelos").innerHTML = "<small>Comece por um modelo do seu ramo (você pode editar tudo):</small><div class='acoes'>" +
+    Object.keys(modelosDaEmpresa()).map(t => `<button type="button" class="btn sec" data-modelo="${esc(t)}">${esc(t)}</button>`).join("") + "</div>";
+}
 function maisItem(){
   $("#linhas").insertAdjacentHTML("beforeend",
     `<div class="card"><input class="i-txt" placeholder="Item (ex.: Conferir o troco)"><input class="i-resp" placeholder="Responsável (opcional)"><input class="i-prazo" type="date" aria-label="Prazo"></div>`);
@@ -170,11 +178,19 @@ $("#f-login").onsubmit = e => { e.preventDefault(); autenticar(false); };
 $("#b-cadastro").onclick = () => $("#f-login").reportValidity() && autenticar(true);
 $("#f-empresa").onsubmit = async e => {
   e.preventDefault();
-  const { error } = await db.rpc("criar_empresa", { p_nome: $("#nome-emp").value.trim() });
+  const { error } = await db.rpc("criar_empresa", { p_nome: $("#nome-emp").value.trim(), p_segmento: $("#seg").value });
   if(error) return aviso(error.message);
   carregarEmpresa();
 };
 $("#b-novo").onclick = novo;
+$("#seg").innerHTML = '<option value="" disabled selected>Tipo de empresa</option>' +
+  Object.entries(MODELOS).map(([k, s]) => `<option value="${k}">${s.nome}</option>`).join("");
+$("#modelos").onclick = e => {
+  const b = e.target.closest("[data-modelo]"); if(!b) return;
+  const t = b.dataset.modelo;
+  $("#titulo").value = t; $("#linhas").innerHTML = "";
+  modelosDaEmpresa()[t].split("; ").forEach(x => { maisItem(); $("#linhas").lastElementChild.querySelector(".i-txt").value = x; });
+};
 $("#b-mais").onclick = maisItem;
 $("#f-novo").onsubmit = salvar;
 $("#lista").onclick = e => { const b = e.target.closest("[data-id]"); if(b) abrir(b.dataset.id); };
