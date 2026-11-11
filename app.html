@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Syncro | App</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--v:#10B981;--g:#1E293B;--f:#F8FAFC;--c:#64748B;--a:#F59E0B;--b:#E2E8F0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--f);color:var(--g);font:16px/1.5 "Plus Jakarta Sans",system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 20px;padding-top:max(12px,env(safe-area-inset-top));background:#fff;border-bottom:1px solid var(--b)}
+header b{font-size:20px;font-weight:800}
+#quem{color:var(--c);font-size:14px;margin-left:auto}
+main{max-width:640px;margin:0 auto;padding:20px 20px calc(24px + env(safe-area-inset-bottom))}
+h1{font-size:24px;margin:0 0 16px;letter-spacing:-.01em}
+.card{display:block;background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;margin-bottom:12px;color:inherit}
+button.card{width:100%;text-align:left;font:inherit;cursor:pointer}
+input{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--b);border-radius:10px;margin-bottom:10px;background:#fff;color:var(--g);font:inherit}
+input[type=checkbox]{width:24px;min-height:24px;height:24px;margin:0;flex:none;accent-color:var(--v)}
+.btn{min-height:48px;padding:0 20px;border:2px solid transparent;border-radius:12px;font:inherit;font-weight:700;background:var(--v);color:var(--g);cursor:pointer}
+.btn.sec{background:transparent;border-color:var(--g)}
+.btn.link{background:none;min-height:40px;padding:0 8px;color:var(--c);font-weight:500}
+.acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.barra{height:8px;background:var(--b);border-radius:99px;overflow:hidden;margin-top:8px}
+.barra i{display:block;height:100%;background:var(--v)}
+.msg{background:#FEF3C7;border-left:4px solid var(--a);border-radius:8px;padding:10px 12px;margin-bottom:16px}
+.item{display:flex;gap:12px;align-items:center;min-height:56px;border-top:1px solid var(--b);cursor:pointer}
+.item:first-child{border-top:0}
+small{color:var(--c)}
+:focus-visible{outline:3px solid var(--g);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <b>Syncro</b><span id="quem"></span>
+  <button class="btn link" id="sair" hidden>Sair</button>
+</header>
+<main>
+  <div id="msg" class="msg" role="alert" hidden></div>
+
+  <section id="v-login">
+    <h1>Entre ou crie sua conta</h1>
+    <form id="f-login">
+      <input id="email" type="email" placeholder="E-mail" autocomplete="email" required>
+      <input id="senha" type="password" placeholder="Senha (mínimo 6 caracteres)" autocomplete="current-password" minlength="6" required>
+      <div class="acoes">
+        <button class="btn" type="submit">Entrar</button>
+        <button class="btn sec" type="button" id="b-cadastro">Criar conta</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="v-empresa" hidden>
+    <h1>Qual o nome da sua empresa?</h1>
+    <form id="f-empresa">
+      <input id="nome-emp" placeholder="Ex.: Padaria Boa Massa" required>
+      <button class="btn" type="submit">Continuar</button>
+    </form>
+  </section>
+
+  <section id="v-lista" hidden>
+    <h1>Seus checklists</h1>
+    <div id="lista"></div>
+    <button class="btn" id="b-novo">Novo checklist</button>
+  </section>
+
+  <section id="v-novo" hidden>
+    <h1>Novo checklist</h1>
+    <form id="f-novo">
+      <input id="titulo" placeholder="Título (ex.: Abertura da loja)" required>
+      <div id="linhas"></div>
+      <div class="acoes">
+        <button class="btn sec" type="button" id="b-mais">Adicionar item</button>
+        <button class="btn" type="submit">Salvar checklist</button>
+        <button class="btn link" type="button" data-voltar>Cancelar</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="v-check" hidden>
+    <h1 id="c-titulo"></h1>
+    <div class="card" id="itens"></div>
+    <button class="btn sec" data-voltar>Voltar</button>
+  </section>
+</main>
+
+<script>
+/* 1. Cole aqui os dados do seu projeto (Settings > API). Use só a chave anon, nunca a service_role. */
+const URL_SB = "COLE_AQUI_A_URL_DO_PROJETO";
+const CHAVE = "COLE_AQUI_A_CHAVE_ANON";
+
+const db = supabase.createClient(URL_SB, CHAVE);
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const telas = ["login","empresa","lista","novo","check"];
+let eu = null, emp = null;
+
+function ir(t){ telas.forEach(x => $("#v-"+x).hidden = x !== t); $("#sair").hidden = t === "login"; aviso(""); }
+function aviso(m){ const e = $("#msg"); e.textContent = m; e.hidden = !m; }
+
+async function iniciar(){
+  const { data:{ session } } = await db.auth.getSession();
+  if(!session) return ir("login");
+  eu = session.user; carregarEmpresa();
+}
+
+async function autenticar(cadastro){
+  const email = $("#email").value.trim(), password = $("#senha").value;
+  const r = cadastro ? await db.auth.signUp({ email, password }) : await db.auth.signInWithPassword({ email, password });
+  if(r.error) return aviso(r.error.message);
+  if(!r.data.session) return aviso("Conta criada. Confirme seu e-mail e depois clique em Entrar.");
+  eu = r.data.session.user; carregarEmpresa();
+}
+
+async function carregarEmpresa(){
+  const { data, error } = await db.from("membros").select("empresa_id, empresas(nome, plano)").limit(1).maybeSingle();
+  if(error) return aviso(error.message);
+  if(!data) return ir("empresa");
+  emp = { id: data.empresa_id, ...data.empresas };
+  $("#quem").textContent = emp.nome;
+  listar();
+}
+
+async function listar(){
+  ir("lista");
+  const { data, error } = await db.from("checklists").select("id, titulo, itens(concluido_em)").order("criado_em", { ascending:false });
+  if(error) return aviso(error.message);
+  $("#lista").innerHTML = data.length ? data.map(c => {
+    const t = c.itens.length, f = c.itens.filter(i => i.concluido_em).length, p = t ? Math.round(f/t*100) : 0;
+    return `<button class="card" data-id="${c.id}"><b>${esc(c.titulo)}</b><br><small>${f} de ${t} itens concluídos</small><div class="barra"><i style="width:${p}%"></i></div></button>`;
+  }).join("") : `<p><small>Nenhum checklist ainda. Crie o primeiro.</small></p>`;
+}
+
+function novo(){ ir("novo"); $("#titulo").value = ""; $("#linhas").innerHTML = ""; maisItem(); maisItem(); }
+function maisItem(){
+  $("#linhas").insertAdjacentHTML("beforeend",
+    `<div class="card"><input class="i-txt" placeholder="Item (ex.: Conferir o troco)"><input class="i-resp" placeholder="Responsável (opcional)"><input class="i-prazo" type="date" aria-label="Prazo"></div>`);
+}
+
+async function salvar(e){
+  e.preventDefault();
+  const itens = [...document.querySelectorAll("#linhas .card")].map((l, i) => ({
+    texto: l.querySelector(".i-txt").value.trim(),
+    responsavel: l.querySelector(".i-resp").value.trim() || null,
+    prazo: l.querySelector(".i-prazo").value || null,
+    ordem: i
+  })).filter(i => i.texto);
+  if(!itens.length) return aviso("Adicione ao menos um item.");
+  const { data:c, error } = await db.from("checklists").insert({ empresa_id: emp.id, titulo: $("#titulo").value.trim() }).select("id").single();
+  if(error) return aviso(error.message);
+  const r = await db.from("itens").insert(itens.map(i => ({ ...i, checklist_id: c.id })));
+  if(r.error) return aviso(r.error.message);
+  listar();
+}
+
+async function abrir(id){
+  ir("check");
+  const { data:c, error } = await db.from("checklists").select("titulo, itens(id, texto, responsavel, prazo, concluido_em, ordem)").eq("id", id).single();
+  if(error) return aviso(error.message);
+  $("#c-titulo").textContent = c.titulo;
+  $("#itens").innerHTML = c.itens.sort((a, b) => a.ordem - b.ordem).map(i => {
+    const info = [i.responsavel, i.prazo && "até " + i.prazo.split("-").reverse().join("/")].filter(Boolean).map(esc).join(" · ");
+    return `<label class="item"><input type="checkbox" data-id="${i.id}" ${i.concluido_em ? "checked" : ""}><span>${esc(i.texto)}${info ? `<br><small>${info}</small>` : ""}</span></label>`;
+  }).join("");
+}
+
+$("#f-login").onsubmit = e => { e.preventDefault(); autenticar(false); };
+$("#b-cadastro").onclick = () => $("#f-login").reportValidity() && autenticar(true);
+$("#f-empresa").onsubmit = async e => {
+  e.preventDefault();
+  const { error } = await db.rpc("criar_empresa", { p_nome: $("#nome-emp").value.trim() });
+  if(error) return aviso(error.message);
+  carregarEmpresa();
+};
+$("#b-novo").onclick = novo;
+$("#b-mais").onclick = maisItem;
+$("#f-novo").onsubmit = salvar;
+$("#lista").onclick = e => { const b = e.target.closest("[data-id]"); if(b) abrir(b.dataset.id); };
+document.querySelectorAll("[data-voltar]").forEach(b => b.onclick = listar);
+$("#itens").onchange = async e => {
+  const k = e.target; if(!k.dataset.id) return;
+  const { error } = await db.from("itens").update({
+    concluido_em: k.checked ? new Date().toISOString() : null,
+    concluido_por: k.checked ? eu.id : null
+  }).eq("id", k.dataset.id);
+  if(error){ k.checked = !k.checked; aviso(error.message); }
+};
+$("#sair").onclick = () => db.auth.signOut().then(() => { eu = emp = null; $("#quem").textContent = ""; ir("login"); });
+
+iniciar();
+</script>
+</body>
+</html>

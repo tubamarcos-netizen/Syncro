@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F8FAFC">
+<title>Syncro | Gestão inteligente de equipes e processos</title>
+<meta name="description" content="Checklists, escalas e relatórios para sua equipe trabalhar sincronizada. Comece grátis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --verde:#10B981;
+  --verde-escuro:#0B8F64;
+  --grafite:#1E293B;
+  --gelo:#F8FAFC;
+  --chumbo:#64748B;
+  --ambar:#F59E0B;
+  --ambar-claro:#FEF3C7;
+  --verde-claro:#D1FAE5;
+  --borda:#E2E8F0;
+  --raio:14px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--gelo);color:var(--grafite);
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.6;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+img,svg{display:block;max-width:100%}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grafite);outline-offset:3px;border-radius:6px}
+.wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* Topo */
+.topo{position:sticky;top:0;z-index:10;background:rgba(248,250,252,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--borda);padding-top:env(safe-area-inset-top,0px)}
+.topo .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.marca{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:20px;letter-spacing:.01em}
+.marca svg{width:30px;height:30px}
+.topo nav{display:none;gap:28px;font-size:15px;font-weight:500;color:var(--chumbo)}
+.topo nav a{text-decoration:none}
+.topo nav a:hover{color:var(--grafite)}
+
+/* Botões */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;
+  border-radius:12px;font:inherit;font-weight:700;font-size:16px;text-decoration:none;cursor:pointer;
+  border:2px solid transparent;transition:background .15s,border-color .15s;
+}
+.btn-principal{background:var(--verde);color:var(--grafite)}
+.btn-principal:hover{background:#0FC17F}
+.btn-contorno{background:transparent;border-color:var(--grafite);color:var(--grafite)}
+.btn-contorno:hover{background:var(--grafite);color:var(--gelo)}
+.btn-pequeno{min-height:40px;padding:0 16px;font-size:14px}
+
+/* Hero */
+.hero{padding:36px 0 48px}
+.hero h1{font-size:clamp(34px,9vw,60px);line-height:1.08;letter-spacing:-.02em;font-weight:800;margin:0 0 16px}
+.hero p.sub{font-size:18px;color:var(--chumbo);margin:0 0 28px;max-width:34em}
+.hero .acoes{display:flex;flex-direction:column;gap:12px}
+.hero .nota{font-size:14px;color:var(--chumbo);margin:14px 0 0}
+
+/* Painel de demonstração */
+.painel{
+  margin-top:40px;background:#fff;border:1px solid var(--borda);border-radius:20px;
+  padding:20px;box-shadow:0 18px 40px -24px rgba(30,41,59,.35);
+}
+.painel h2{font-size:17px;margin:0;font-weight:700}
+.painel .topo-painel{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.painel .progresso-txt{font-size:14px;color:var(--chumbo);font-variant-numeric:tabular-nums}
+.barra{height:8px;background:var(--borda);border-radius:99px;overflow:hidden;margin-bottom:16px}
+.barra span{display:block;height:100%;width:0;background:var(--verde);border-radius:99px;transition:width .3s}
+.itens{list-style:none;margin:0;padding:0}
+.itens li{border-top:1px solid var(--borda)}
+.itens label{display:flex;align-items:center;gap:12px;min-height:52px;cursor:pointer;font-weight:500}
+.itens input{position:absolute;opacity:0;width:0;height:0}
+.caixa{flex:none;width:24px;height:24px;border-radius:8px;border:2px solid var(--chumbo);display:grid;place-items:center;transition:background .15s,border-color .15s}
+.caixa svg{width:14px;height:14px;opacity:0;stroke:var(--grafite)}
+.itens input:checked + .caixa{background:var(--verde);border-color:var(--verde)}
+.itens input:checked + .caixa svg{opacity:1}
+.itens input:checked ~ .txt{color:var(--chumbo);text-decoration:line-through}
+.itens input:focus-visible + .caixa{outline:3px solid var(--grafite);outline-offset:2px}
+.resp{margin-left:auto;font-size:13px;color:var(--chumbo);font-weight:500}
+.alerta{
+  margin-top:16px;display:flex;gap:12px;align-items:flex-start;background:var(--ambar-claro);
+  border-left:4px solid var(--ambar);border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.5
+}
+.alerta strong{display:block;font-size:14px}
+.alerta svg{flex:none;width:20px;height:20px;margin-top:2px}
+
+/* Seções */
+section{padding:56px 0}
+.titulo{font-size:clamp(26px,6.5vw,38px);line-height:1.15;letter-spacing:-.015em;font-weight:800;margin:0 0 12px}
+.lead{color:var(--chumbo);margin:0 0 32px;max-width:36em}
+.recursos{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.recursos li{display:grid;grid-template-columns:44px 1fr;gap:16px;padding:20px 0;border-top:1px solid var(--borda)}
+.recursos .ico{width:44px;height:44px;border-radius:12px;background:var(--verde-claro);display:grid;place-items:center}
+.recursos .ico svg{width:22px;height:22px;stroke:var(--grafite)}
+.recursos h3{margin:0 0 4px;font-size:18px}
+.recursos p{margin:0;color:var(--chumbo)}
+
+.faixa{background:var(--grafite);color:var(--gelo)}
+.faixa .lead{color:#CBD5E1}
+.faixa .passos{list-style:none;margin:0;padding:0;display:grid;gap:20px}
+.faixa .passos li{padding-left:20px;border-left:3px solid var(--verde)}
+.faixa .passos strong{display:block;font-size:18px;margin-bottom:2px}
+.faixa .passos span{color:#CBD5E1}
+
+/* Planos */
+.planos{display:grid;gap:16px}
+.plano{background:#fff;border:1px solid var(--borda);border-radius:var(--raio);padding:24px;display:flex;flex-direction:column}
+.plano.destaque{border:2px solid var(--verde);position:relative}
+.selo{position:absolute;top:-13px;left:20px;background:var(--verde);color:var(--grafite);font-weight:700;font-size:13px;padding:3px 12px;border-radius:99px}
+.plano h3{margin:0;font-size:20px}
+.plano .para{margin:2px 0 14px;color:var(--chumbo);font-size:14px}
+.preco{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.preco small{font-size:15px;font-weight:500;color:var(--chumbo);letter-spacing:0}
+.plano ul{list-style:none;margin:18px 0 22px;padding:0;display:grid;gap:10px;font-size:15px}
+.plano li{display:grid;grid-template-columns:20px 1fr;gap:10px}
+.plano li svg{width:18px;height:18px;margin-top:3px;stroke:var(--verde-escuro)}
+.plano .btn{margin-top:auto}
+.rodape-planos{margin-top:20px;font-size:14px;color:var(--chumbo)}
+
+/* CTA final */
+.final{text-align:left}
+.final .caixa-final{background:var(--verde);color:var(--grafite);border-radius:22px;padding:32px 24px}
+.final h2{margin:0 0 10px;font-size:clamp(26px,6.5vw,38px);line-height:1.15;letter-spacing:-.015em;font-weight:800}
+.final p{margin:0 0 22px;max-width:32em}
+.final .btn{background:var(--grafite);color:var(--gelo)}
+.final .btn:hover{background:#0F172A}
+
+footer{padding:32px 0 40px;border-top:1px solid var(--borda);color:var(--chumbo);font-size:14px}
+footer .wrap{display:flex;flex-direction:column;gap:10px}
+footer .marca{font-size:17px;color:var(--grafite)}
+footer .marca svg{width:24px;height:24px}
+
+@media (min-width:720px){
+  .topo nav{display:flex}
+  .hero{padding:72px 0 64px}
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+  .hero .acoes{flex-direction:row}
+  .painel{margin-top:0}
+  .recursos{grid-template-columns:1fr 1fr;column-gap:48px}
+  .recursos li:nth-child(2){border-top:1px solid var(--borda)}
+  .faixa .passos{grid-template-columns:repeat(3,1fr);gap:32px}
+  .planos{grid-template-columns:repeat(2,1fr)}
+  footer .wrap{flex-direction:row;justify-content:space-between;align-items:center}
+}
+@media (min-width:1000px){
+  .planos{grid-template-columns:repeat(4,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 40 40">
+    <path d="M4 17 L18 3 L26 11 L12 25 Z" fill="#10B981"/>
+    <path d="M4 36 L4 25 L14 15 L24 25 Z" fill="#0B8F64"/>
+    <path d="M20 29 L38 11 L38 17 L24 34 Z" fill="#10B981"/>
+  </symbol>
+  <symbol id="ok" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="#inicio" aria-label="Syncro, início">
+      <svg aria-hidden="true"><use href="#logo"/></svg>
+      Syncro
+    </a>
+    <nav aria-label="Principal">
+      <a href="#recursos">Recursos</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#planos">Planos</a>
+    </nav>
+    <!-- Troque o href pela página de cadastro quando ela existir -->
+    <a class="btn btn-principal btn-pequeno" href="app.html">Começar grátis</a>
+  </div>
+</header>
+
+<main id="inicio">
+
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <h1>Sua equipe sincronizada, do primeiro item ao último.</h1>
+        <p class="sub">Crie checklists, monte escalas e acompanhe tudo em tempo real. Sem papel, sem planilha perdida e sem mensagem solta no grupo.</p>
+        <div class="acoes">
+          <a class="btn btn-principal" href="app.html">Começar grátis</a>
+          <a class="btn btn-contorno" href="#planos">Ver planos</a>
+        </div>
+        <p class="nota">Plano gratuito para sempre. Não pede cartão.</p>
+      </div>
+
+      <div class="painel" aria-label="Exemplo de checklist">
+        <div class="topo-painel">
+          <h2>Abertura da loja</h2>
+          <span class="progresso-txt" id="prog-txt" aria-live="polite">2 de 5</span>
+        </div>
+        <div class="barra" aria-hidden="true"><span id="prog-barra"></span></div>
+        <ul class="itens">
+          <li><label><input type="checkbox" checked><span class="caixa"><svg aria-hidden="true"><use href="#ok"/></svg></span><span class="txt">Ligar caixas e sistema</span><span class="resp">Ana</span></label></li>
+          <li><label><input type="checkbox" checked><span class="caixa"><svg aria-hidden="true"><use href="#ok"/></svg></span><span class="txt">Conferir troco do caixa</span><span class="resp">Ana</span></label></li>
+          <li><label><input type="checkbox"><span class="caixa"><svg aria-hidden="true"><use href="#ok"/></svg></span><span class="txt">Repor vitrine</span><span class="resp">Carlos</span></label></li>
+          <li><label><input type="checkbox"><span class="caixa"><svg aria-hidden="true"><use href="#ok"/></svg></span><span class="txt">Fotografar o balcão limpo</span><span class="resp">Carlos</span></label></li>
+          <li><label><input type="checkbox"><span class="caixa"><svg aria-hidden="true"><use href="#ok"/></svg></span><span class="txt">Liberar a porta às 9h</span><span class="resp">Ana</span></label></li>
+        </ul>
+        <div class="alerta" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1E293B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>
+          <div><strong>Conflito na escala de sexta</strong>Carlos já está escalado na Loja 2 às 14h.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="recursos">
+    <div class="wrap">
+      <h2 class="titulo">Tudo o que a rotina da equipe precisa</h2>
+      <p class="lead">Comece com um checklist simples e ative mais recursos conforme o negócio cresce.</p>
+      <ul class="recursos">
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L6.8 5M3.5 12l1.2 1.2L6.8 11M3.5 18l1.2 1.2L6.8 17"/></svg></div>
+          <div><h3>Checklists com responsável e prazo</h3><p>Cada item tem dono, data e observação. Quem abre a tela sabe o que falta.</p></div>
+        </li>
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+          <div><h3>Escalas sem conflito</h3><p>Monte turnos e receba um aviso quando alguém for escalado em dois lugares ao mesmo tempo.</p></div>
+        </li>
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></div>
+          <div><h3>Relatório em PDF com a sua marca</h3><p>Entregue ao cliente ou à diretoria um documento limpo, com o que foi feito e quando.</p></div>
+        </li>
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+          <div><h3>Foto como comprovação</h3><p>Anexe uma imagem ao item concluído e guarde o histórico para qualquer auditoria.</p></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="como-funciona" class="faixa">
+    <div class="wrap">
+      <h2 class="titulo">Pronto para usar em minutos</h2>
+      <p class="lead">Você não precisa configurar nada complexo para ver resultado no primeiro dia.</p>
+      <ol class="passos">
+        <li><strong>Escolha um modelo</strong><span>Parta de um checklist pronto para loja, oficina, restaurante ou obra.</span></li>
+        <li><strong>Convide a equipe</strong><span>Cada pessoa recebe as tarefas dela direto no celular.</span></li>
+        <li><strong>Acompanhe e prove</strong><span>Veja o andamento ao vivo e gere o relatório quando precisar.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="planos">
+    <div class="wrap">
+      <h2 class="titulo">Planos que crescem com você</h2>
+      <p class="lead">Comece de graça. Troque de plano quando a equipe e as exigências aumentarem.</p>
+
+      <div class="planos">
+        <article class="plano">
+          <h3>Grátis</h3>
+          <p class="para">Para começar a se organizar</p>
+          <div class="preco">R$ 0</div>
+          <ul>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>1 usuário</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Até 3 checklists</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Modelos prontos</li>
+          </ul>
+          <a class="btn btn-contorno" href="app.html">Começar grátis</a>
+        </article>
+
+        <article class="plano">
+          <h3>Essencial</h3>
+          <p class="para">Para o dono e uma equipe pequena</p>
+          <div class="preco">R$ 29<small> /mês</small></div>
+          <ul>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Até 3 usuários</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Checklists ilimitados</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Responsável, prazo e observações</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Lembretes de itens parados</li>
+          </ul>
+          <a class="btn btn-contorno" href="app.html">Escolher Essencial</a>
+        </article>
+
+        <article class="plano destaque">
+          <span class="selo">Mais escolhido</span>
+          <h3>Profissional</h3>
+          <p class="para">Para padronizar a operação</p>
+          <div class="preco">R$ 89<small> /mês</small></div>
+          <ul>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Até 10 usuários</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Relatório em PDF com a sua marca</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Foto como comprovação</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Escalas com alerta de conflito</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Tarefas recorrentes</li>
+          </ul>
+          <a class="btn btn-principal" href="app.html">Escolher Profissional</a>
+        </article>
+
+        <article class="plano">
+          <h3>Empresa</h3>
+          <p class="para">Para várias unidades e gestores</p>
+          <div class="preco"><small>a partir de </small>R$ 249<small> /mês</small></div>
+          <ul>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Usuários ilimitados</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Várias unidades</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Painel de indicadores</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Permissões por cargo</li>
+            <li><svg aria-hidden="true"><use href="#ok"/></svg>Integrações e exportação de dados</li>
+          </ul>
+          <a class="btn btn-contorno" href="app.html">Falar com a equipe</a>
+        </article>
+      </div>
+      <p class="rodape-planos">Valores de exemplo. Ajuste conforme a validação com os primeiros clientes.</p>
+    </div>
+  </section>
+
+  <section id="comecar" class="final">
+    <div class="wrap">
+      <div class="caixa-final">
+        <h2>Comece hoje com o plano gratuito</h2>
+        <p>Crie seu primeiro checklist em poucos minutos e convide a equipe quando estiver pronto.</p>
+        <!-- Troque o href pela página de cadastro -->
+        <a class="btn" href="app.html">Criar minha conta</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="marca" href="#inicio"><svg aria-hidden="true"><use href="#logo"/></svg>Syncro</a>
+    <span>Gestão inteligente de equipes e processos</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var checks=document.querySelectorAll('.itens input');
+  var txt=document.getElementById('prog-txt');
+  var barra=document.getElementById('prog-barra');
+  function atualizar(){
+    var feitos=0;
+    checks.forEach(function(c){if(c.checked)feitos++;});
+    txt.textContent=feitos+' de '+checks.length;
+    barra.style.width=(feitos/checks.length*100)+'%';
+  }
+  checks.forEach(function(c){c.addEventListener('change',atualizar);});
+  atualizar();
+})();
+</script>
+</body>
+</html>
